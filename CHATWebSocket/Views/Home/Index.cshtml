@@ -1,0 +1,125 @@
+﻿@{
+
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>CHAT</title>
+    <script type="text/javascript">
+        var connectButton, disconnectButton, peopleDiv, messageInput, sendButton, sendSmiley, responseDiv, uriSpan, uri, webSocket;
+
+        var connect = function () {
+
+            connectButton.disabled = true;
+            disconnectButton.disabled = false;
+            sendButton.disabled = false;
+            sendSmiley.disabled = false;
+
+            webSocket = new WebSocket(uri);
+
+            webSocket.onmessage = function (e) {
+                responseDiv.innerHTML += '<div>' + e.data + '</div>';
+                //peopleDiv.innerHTML += '<div>' + e.data.toString().split(' ')[0] + '</div>';
+                
+                if (e.data.toString().split(' ')[1] == "joined:") {
+                    peopleDiv.innerHTML += '<div>' + e.data.toString().split(' ')[2] + '</div>';
+                }
+                if (e.data.toString().split(' ')[1] == "left:") {
+                    peopleDiv.innerHTML += '<div>' + e.data.toString().split(' ')[2]+' left' + '</div>';
+                }
+            };
+
+            webSocket.onopen = function (e) {
+                responseDiv.innerHTML = '';
+                responseDiv.innerHTML += '<div>Connecting...</div>';
+            };
+
+            webSocket.onclose = function (e) {
+                responseDiv.innerHTML += '<div>Disconnected.</div>';
+                peopleDiv.innerHTML += '<div>' + 'You left' + '</div>';
+                peopleDiv.innerHTML += '<div>' + '______' + '</div>';
+            };
+
+            webSocket.onerror = function (e) {
+                responseDiv.innerHTML += '<div>Error</div>'
+            };
+        };
+
+        var disconnect = function () {
+            connectButton.disabled = false;
+            disconnectButton.disabled = true;
+            sendButton.disabled = true;
+            sendSmiley.disabled = true;
+            webSocket.close();
+        };
+
+        var sendMessage = function () {
+            var message = messageInput.value;
+            webSocket.send(message);
+            messageInput.value = '';
+        };
+
+        var sendSmile = function () {
+            var message = messageInput.value;
+            webSocket.send("=)");
+            messageInput.value = '';
+        };
+
+        var setup = function () {
+            connectButton = document.getElementById('connect');
+            disconnectButton = document.getElementById('disconnect');
+            messageInput = document.getElementById('message');
+            responseDiv = document.getElementById('responseLog');
+            peopleDiv = document.getElementById('peopleLog');
+            sendButton = document.getElementById('sendMessage');
+            sendSmiley = document.getElementById('sendSmile');
+            onlinespan = document.getElementById('online');
+            namespan = document.getElementById('name');
+            uriSpan = document.getElementById('uri');
+            var name = prompt('What is your name?:');
+            namespan.innerHTML = name + "'s chatroom";
+            onlinespan.innerHTML = "Online:";
+            uri = 'ws://localhost:12302/api/websocket?name=' + name;
+            uriSpan.innerHTML = uri;
+        };
+    </script>
+</head>
+<body onload="setup()" style="font-family: sans-serif;">
+    <div class="row">
+        <hr />
+        <div class="col-md-3 col-md-offset-7">
+            <button id="connect" class="btn btn-succes" onclick="connect()">Enter</button>
+            <button id="disconnect" class="btn btn-succes" disabled="disabled" onclick="disconnect()">Leave</button>
+        </div>
+    </div>
+    <div class="row">
+        <span class ="col-md-5 col-md-offset-3" id="name" style="font-size:large"></span>
+        <span  id="online" style="font-size:large"></span>
+        <div class="col-md-6 col-md-offset-3" 
+                   id="responseLog" 
+                   style="border: 1px solid grey;
+                   width: 490px; height: 370px;
+                   overflow: auto;
+                   font-family: monospace;">
+        </div>
+        <div 
+             id="peopleLog"
+             style="border: 1px solid grey;
+                   width: 100px; height: 370px;
+                   overflow: auto;
+                   font-family: monospace;">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+            <label for="message">Message</label>
+            <textarea rows="2" id="message" cols="50" name="komentar" style="min-width:380px"></textarea>
+            <button id="sendMessage" class="btn btn-success" onclick="sendMessage()" disabled="disabled">Send</button>
+            <button id="sendSmile" class="btn btn-success" onclick="sendSmile()" disabled="disabled">=)</button>
+        </div>
+    </div>
+</body>
+</html>
